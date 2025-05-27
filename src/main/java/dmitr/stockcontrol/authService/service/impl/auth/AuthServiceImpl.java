@@ -1,11 +1,11 @@
 package dmitr.stockcontrol.authService.service.impl.auth;
 
-import dmitr.stockcontrol.authService.dto.auth.AuthUserDto;
 import dmitr.stockcontrol.authService.controller.auth.request.AuthRequestDto;
 import dmitr.stockcontrol.authService.controller.auth.request.RefreshRequestDto;
 import dmitr.stockcontrol.authService.controller.auth.response.AuthResponseDto;
 import dmitr.stockcontrol.authService.dao.entity.user.User;
 import dmitr.stockcontrol.authService.dao.repository.user.UserRepository;
+import dmitr.stockcontrol.authService.dto.auth.AuthUserDto;
 import dmitr.stockcontrol.authService.exception.extended.InvalidAuthCredentialsException;
 import dmitr.stockcontrol.authService.service.face.auth.AuthService;
 import dmitr.stockcontrol.authService.service.face.auth.AuthUserTokenExtractorService;
