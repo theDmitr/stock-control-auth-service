@@ -1,11 +1,10 @@
 package dmitr.stockcontrol.authservice.exception.handler.common;
 
 import dmitr.stockcontrol.authservice.exception.base.BadRequestException;
-import dmitr.stockcontrol.authservice.exception.base.CommonException;
 import dmitr.stockcontrol.authservice.exception.base.NotFoundException;
 import dmitr.stockcontrol.authservice.exception.base.UnauthorizedException;
 import dmitr.stockcontrol.authservice.exception.handler.common.response.CommonErrorResponse;
-import dmitr.stockcontrol.authservice.helper.I18nMessageProvider;
+import dmitr.stockcontrol.authservice.helper.HttpExceptionHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -18,29 +17,20 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RequiredArgsConstructor
 public class CommonExceptionHandler {
 
-    private final I18nMessageProvider i18nMessageProvider;
+    private final HttpExceptionHelper httpExceptionHelper;
 
     @ExceptionHandler
     public ResponseEntity<CommonErrorResponse> handle(NotFoundException e) {
-        return generateErrorResponse(e, HttpStatus.NOT_FOUND);
+        return httpExceptionHelper.generateErrorResponseEntity(e, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler
     public ResponseEntity<CommonErrorResponse> handle(BadRequestException e) {
-        return generateErrorResponse(e, HttpStatus.BAD_REQUEST);
+        return httpExceptionHelper.generateErrorResponseEntity(e, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler
     public ResponseEntity<CommonErrorResponse> handle(UnauthorizedException e) {
-        return generateErrorResponse(e, HttpStatus.UNAUTHORIZED);
-    }
-
-    private ResponseEntity<CommonErrorResponse> generateErrorResponse(CommonException e, HttpStatus status) {
-        String localizedMessage = i18nMessageProvider.getMessage(e);
-        CommonErrorResponse commonErrorResponse = CommonErrorResponse.builder()
-                .message(localizedMessage)
-                .code(status.value())
-                .build();
-        return new ResponseEntity<>(commonErrorResponse, status);
+        return httpExceptionHelper.generateErrorResponseEntity(e, HttpStatus.UNAUTHORIZED);
     }
 }

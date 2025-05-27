@@ -1,73 +1,92 @@
 package dmitr.stockcontrol.authservice.service.impl.auth;
 
-import dmitr.stockcontrol.authservice.controller.auth.request.AuthRequest;
-import dmitr.stockcontrol.authservice.controller.auth.response.AuthResponse;
-import dmitr.stockcontrol.authservice.dao.entity.right.Right;
+import dmitr.stockcontrol.authservice.dto.auth.AuthUserDto;
+import dmitr.stockcontrol.authservice.controller.auth.request.AuthRequestDto;
+import dmitr.stockcontrol.authservice.controller.auth.request.RefreshRequestDto;
+import dmitr.stockcontrol.authservice.controller.auth.response.AuthResponseDto;
 import dmitr.stockcontrol.authservice.dao.entity.user.User;
 import dmitr.stockcontrol.authservice.dao.repository.user.UserRepository;
-import dmitr.stockcontrol.authservice.dto.jwt.JwtGenerationDetailsDto;
-import dmitr.stockcontrol.authservice.exception.extended.auth.IncorrectAuthPasswordException;
-import dmitr.stockcontrol.authservice.exception.extended.auth.NotFoundAuthUsernameException;
+import dmitr.stockcontrol.authservice.exception.extended.auth.InvalidAuthCredentialsException;
 import dmitr.stockcontrol.authservice.service.face.auth.AuthService;
-import dmitr.stockcontrol.authservice.service.face.jwt.JwtService;
+import dmitr.stockcontrol.authservice.service.face.auth.AuthUserTokenExtractorService;
+import dmitr.stockcontrol.authservice.service.face.auth.AuthUserTokenGeneratorService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
-    private final JwtService jwtService;
-    private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    private static final long FIVE_MINUTES_IN_MILLIS = TimeUnit.MINUTES.toMillis(5);
-    private static final long SIX_MONTH_IN_MILLIS = TimeUnit.DAYS.toMillis(180);
+    private final UserRepository userRepository;
+
+    private final AuthUserTokenGeneratorService authUserTokenGeneratorService;
+    private final AuthUserTokenExtractorService authUserTokenExtractorService;
 
     @Override
-    public AuthResponse auth(AuthRequest authRequest) {
+    public AuthResponseDto auth(AuthRequestDto authRequest) {
+        User authUser = getUserFromAuthRequestDto(authRequest);
+        AuthUserDto authUserDto = getAuthUserDtoFromUser(authUser);
+        return getAuthResponseByAuthUserDto(authUserDto);
+    }
+
+    @Override
+    public AuthResponseDto refresh(RefreshRequestDto refreshRequest) {
+        String refreshToken = refreshRequest.getRefreshToken();
+        UUID authUserId = authUserTokenExtractorService.getUserIdFromRefreshToken(refreshToken);
+
+        User userFromRefreshToken = userRepository.findById(authUserId)
+                .orElseThrow(InvalidAuthCredentialsException::new);
+
+        AuthUserDto authUserDto = getAuthUserDtoFromUser(userFromRefreshToken);
+        return getAuthResponseByAuthUserDto(authUserDto);
+    }
+
+    private User getUserFromAuthRequestDto(AuthRequestDto authRequest) {
         String authUsername = authRequest.getUsername();
 
-        User foundedUserToAuth = userRepository.findByUsername(authUsername)
-                .orElseThrow(NotFoundAuthUsernameException::new);
+        User userToAuth = userRepository.findByUsername(authUsername)
+                .orElseThrow(InvalidAuthCredentialsException::new);
 
         String authPassword = authRequest.getPassword();
-        String validPasswordHash = foundedUserToAuth.getPassword();
+        String validPasswordHash = userToAuth.getPassword();
 
         if (!passwordEncoder.matches(authPassword, validPasswordHash)) {
-            throw new IncorrectAuthPasswordException();
+            throw new InvalidAuthCredentialsException();
         }
 
-        return AuthResponse.builder()
-                .accessToken(generateAccessToken(foundedUserToAuth))
-                .refreshToken(generateRefreshToken(foundedUserToAuth))
-                .build();
+        return userToAuth;
     }
 
-    private String generateAccessToken(User user) {
-        List<String> rightLabels = user.getRights()
+    private AuthUserDto getAuthUserDtoFromUser(User user) {
+        UUID authUserId = user.getId();
+
+        List<GrantedAuthority> authUserRights = user.getRights()
                 .stream()
-                .map(Right::getLabel)
+                .map(r -> (GrantedAuthority) new SimpleGrantedAuthority(r.getLabel()))
                 .toList();
 
-        JwtGenerationDetailsDto jwtGenerationDetails = JwtGenerationDetailsDto.builder()
-                .subject(user.getId().toString())
-                .claim("rights", rightLabels)
-                .lifetime(FIVE_MINUTES_IN_MILLIS)
+        return AuthUserDto.builder()
+                .id(authUserId)
+                .rights(authUserRights)
                 .build();
-
-        return jwtService.buildToken(jwtGenerationDetails);
     }
 
-    private String generateRefreshToken(User user) {
-        JwtGenerationDetailsDto jwtGenerationDetails = JwtGenerationDetailsDto.builder()
-                .subject(user.getId().toString())
-                .lifetime(SIX_MONTH_IN_MILLIS)
+    private AuthResponseDto getAuthResponseByAuthUserDto(AuthUserDto authUser) {
+        String accessToken = authUserTokenGeneratorService.generateAccessToken(authUser);
+        String refreshToken = authUserTokenGeneratorService.generateRefreshToken(authUser);
+        return AuthResponseDto.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
                 .build();
-        return jwtService.buildToken(jwtGenerationDetails);
     }
 }
