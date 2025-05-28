@@ -1,11 +1,11 @@
 package dmitr.stockcontrol.authService.service.impl.auth;
 
-import dmitr.stockcontrol.authService.controller.auth.request.AuthRequestDto;
+import dmitr.stockcontrol.authService.controller.auth.request.LoginRequestDto;
 import dmitr.stockcontrol.authService.controller.auth.request.RefreshRequestDto;
 import dmitr.stockcontrol.authService.controller.auth.response.AuthResponseDto;
 import dmitr.stockcontrol.authService.dao.entity.user.User;
 import dmitr.stockcontrol.authService.dao.repository.user.UserRepository;
-import dmitr.stockcontrol.authService.dto.auth.AuthUserDto;
+import dmitr.stockcontrol.authService.dto.auth.AuthUserDetailsDto;
 import dmitr.stockcontrol.authService.exception.extended.InvalidAuthCredentialsException;
 import dmitr.stockcontrol.authService.service.face.auth.AuthService;
 import dmitr.stockcontrol.authService.service.face.auth.AuthUserTokenExtractorService;
@@ -33,10 +33,10 @@ public class AuthServiceImpl implements AuthService {
     private final AuthUserTokenExtractorService authUserTokenExtractorService;
 
     @Override
-    public AuthResponseDto auth(AuthRequestDto authRequest) {
-        User authUser = getUserFromAuthRequestDto(authRequest);
-        AuthUserDto authUserDto = getAuthUserDtoFromUser(authUser);
-        return getAuthResponseByAuthUserDto(authUserDto);
+    public AuthResponseDto login(LoginRequestDto loginRequest) {
+        User loginUser = getUserFromLoginRequestDto(loginRequest);
+        AuthUserDetailsDto authUserDetailsDto = getAuthUserDtoFromUser(loginUser);
+        return getAuthResponseByAuthUserDto(authUserDetailsDto);
     }
 
     @Override
@@ -47,17 +47,17 @@ public class AuthServiceImpl implements AuthService {
         User userFromRefreshToken = userRepository.findById(authUserId)
                 .orElseThrow(InvalidAuthCredentialsException::new);
 
-        AuthUserDto authUserDto = getAuthUserDtoFromUser(userFromRefreshToken);
-        return getAuthResponseByAuthUserDto(authUserDto);
+        AuthUserDetailsDto authUserDetailsDto = getAuthUserDtoFromUser(userFromRefreshToken);
+        return getAuthResponseByAuthUserDto(authUserDetailsDto);
     }
 
-    private User getUserFromAuthRequestDto(AuthRequestDto authRequest) {
-        String authUsername = authRequest.getUsername();
+    private User getUserFromLoginRequestDto(LoginRequestDto loginRequest) {
+        String authUsername = loginRequest.getUsername();
 
         User userToAuth = userRepository.findByUsername(authUsername)
                 .orElseThrow(InvalidAuthCredentialsException::new);
 
-        String authPassword = authRequest.getPassword();
+        String authPassword = loginRequest.getPassword();
         String validPasswordHash = userToAuth.getPassword();
 
         if (!passwordEncoder.matches(authPassword, validPasswordHash)) {
@@ -67,7 +67,7 @@ public class AuthServiceImpl implements AuthService {
         return userToAuth;
     }
 
-    private AuthUserDto getAuthUserDtoFromUser(User user) {
+    private AuthUserDetailsDto getAuthUserDtoFromUser(User user) {
         UUID authUserId = user.getId();
 
         List<GrantedAuthority> authUserRights = user.getRights()
@@ -75,13 +75,13 @@ public class AuthServiceImpl implements AuthService {
                 .map(r -> (GrantedAuthority) new SimpleGrantedAuthority(r.getLabel()))
                 .toList();
 
-        return AuthUserDto.builder()
+        return AuthUserDetailsDto.builder()
                 .id(authUserId)
                 .rights(authUserRights)
                 .build();
     }
 
-    private AuthResponseDto getAuthResponseByAuthUserDto(AuthUserDto authUser) {
+    private AuthResponseDto getAuthResponseByAuthUserDto(AuthUserDetailsDto authUser) {
         String accessToken = authUserTokenGeneratorService.generateAccessToken(authUser);
         String refreshToken = authUserTokenGeneratorService.generateRefreshToken(authUser);
         return AuthResponseDto.builder()

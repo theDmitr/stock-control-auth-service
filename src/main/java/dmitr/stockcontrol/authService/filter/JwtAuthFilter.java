@@ -1,7 +1,7 @@
 package dmitr.stockcontrol.authService.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dmitr.stockcontrol.authService.dto.auth.AuthUserDto;
+import dmitr.stockcontrol.authService.dto.auth.AuthUserDetailsDto;
 import dmitr.stockcontrol.authService.exception.base.CommonException;
 import dmitr.stockcontrol.authService.exception.handler.response.CommonErrorResponse;
 import dmitr.stockcontrol.authService.helper.exception.HttpExceptionHelper;
@@ -35,7 +35,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         if (accessToken != null) {
             try {
-                AuthUserDto authUser = authUserTokenExtractorService.getAuthUserFromAccessToken(accessToken);
+                AuthUserDetailsDto authUser = authUserTokenExtractorService.getAuthUserFromAccessToken(accessToken);
                 Authentication authentication = new UsernamePasswordAuthenticationToken(authUser, null, authUser.getAuthorities());
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             } catch (CommonException e) {

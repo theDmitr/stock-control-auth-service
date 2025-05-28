@@ -1,6 +1,6 @@
 package dmitr.stockcontrol.authService.controller.auth;
 
-import dmitr.stockcontrol.authService.controller.auth.request.AuthRequestDto;
+import dmitr.stockcontrol.authService.controller.auth.request.LoginRequestDto;
 import dmitr.stockcontrol.authService.controller.auth.request.RefreshRequestDto;
 import dmitr.stockcontrol.authService.controller.auth.response.AuthResponseDto;
 import dmitr.stockcontrol.authService.service.face.auth.AuthService;
@@ -18,8 +18,8 @@ public class AuthRestController {
     private final AuthService authService;
 
     @PostMapping("/login")
-    public AuthResponseDto auth(@RequestBody AuthRequestDto authRequest) {
-        return authService.auth(authRequest);
+    public AuthResponseDto auth(@RequestBody LoginRequestDto loginRequest) {
+        return authService.login(loginRequest);
     }
 
     @PostMapping("/refresh")

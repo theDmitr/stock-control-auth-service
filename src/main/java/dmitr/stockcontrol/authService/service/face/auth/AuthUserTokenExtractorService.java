@@ -1,11 +1,11 @@
 package dmitr.stockcontrol.authService.service.face.auth;
 
-import dmitr.stockcontrol.authService.dto.auth.AuthUserDto;
+import dmitr.stockcontrol.authService.dto.auth.AuthUserDetailsDto;
 
 import java.util.UUID;
 
 public interface AuthUserTokenExtractorService {
 
-    AuthUserDto getAuthUserFromAccessToken(String accessToken);
+    AuthUserDetailsDto getAuthUserFromAccessToken(String accessToken);
     UUID getUserIdFromRefreshToken(String refreshToken);
 }

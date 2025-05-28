@@ -1,6 +1,6 @@
 package dmitr.stockcontrol.authService.service.impl.auth;
 
-import dmitr.stockcontrol.authService.dto.auth.AuthUserDto;
+import dmitr.stockcontrol.authService.dto.auth.AuthUserDetailsDto;
 import dmitr.stockcontrol.authService.dto.jwt.JwtGenerationDetailsDto;
 import dmitr.stockcontrol.authService.service.face.auth.AuthUserTokenGeneratorService;
 import dmitr.stockcontrol.authService.service.face.jwt.JwtService;
@@ -21,7 +21,7 @@ public class AuthUserTokenGeneratorServiceImpl implements AuthUserTokenGenerator
     private static final long ONE_MONTH_IN_MILLIS = TimeUnit.DAYS.toMillis(30);
 
     @Override
-    public String generateAccessToken(AuthUserDto authUser) {
+    public String generateAccessToken(AuthUserDetailsDto authUser) {
         List<String> rightLabels = authUser.getRights()
                 .stream()
                 .map(GrantedAuthority::getAuthority)
@@ -37,7 +37,7 @@ public class AuthUserTokenGeneratorServiceImpl implements AuthUserTokenGenerator
     }
 
     @Override
-    public String generateRefreshToken(AuthUserDto authUser) {
+    public String generateRefreshToken(AuthUserDetailsDto authUser) {
         JwtGenerationDetailsDto jwtGenerationDetails = JwtGenerationDetailsDto.builder()
                 .subject(authUser.getId().toString())
                 .lifetime(ONE_MONTH_IN_MILLIS)

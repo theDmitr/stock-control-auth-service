@@ -11,7 +11,7 @@ import java.util.UUID;
 
 @Getter
 @Builder
-public class AuthUserDto implements UserDetails {
+public class AuthUserDetailsDto implements UserDetails {
 
     private UUID id;
     private List<GrantedAuthority> rights;

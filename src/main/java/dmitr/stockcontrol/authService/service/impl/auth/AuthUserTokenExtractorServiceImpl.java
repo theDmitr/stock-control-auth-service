@@ -1,6 +1,6 @@
 package dmitr.stockcontrol.authService.service.impl.auth;
 
-import dmitr.stockcontrol.authService.dto.auth.AuthUserDto;
+import dmitr.stockcontrol.authService.dto.auth.AuthUserDetailsDto;
 import dmitr.stockcontrol.authService.service.face.auth.AuthUserTokenExtractorService;
 import dmitr.stockcontrol.authService.service.face.jwt.JwtService;
 import io.jsonwebtoken.Claims;
@@ -19,7 +19,7 @@ public class AuthUserTokenExtractorServiceImpl implements AuthUserTokenExtractor
     private final JwtService jwtService;
 
     @Override
-    public AuthUserDto getAuthUserFromAccessToken(String accessToken) {
+    public AuthUserDetailsDto getAuthUserFromAccessToken(String accessToken) {
         Claims claims = jwtService.extractClaimsFromToken(accessToken);
 
         UUID userId = UUID.fromString(claims.getSubject());
@@ -29,7 +29,7 @@ public class AuthUserTokenExtractorServiceImpl implements AuthUserTokenExtractor
                 .map(rightLabel -> (GrantedAuthority) new SimpleGrantedAuthority(rightLabel))
                 .toList();
 
-        return AuthUserDto.builder()
+        return AuthUserDetailsDto.builder()
                 .id(userId)
                 .rights(rights)
                 .build();
