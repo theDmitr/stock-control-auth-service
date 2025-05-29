@@ -3,6 +3,7 @@ package dmitr.stockcontrol.authService.service.impl.auth;
 import dmitr.stockcontrol.authService.controller.auth.request.LoginRequestDto;
 import dmitr.stockcontrol.authService.controller.auth.request.RefreshRequestDto;
 import dmitr.stockcontrol.authService.controller.auth.response.AuthResponseDto;
+import dmitr.stockcontrol.authService.controller.auth.response.AuthUserDto;
 import dmitr.stockcontrol.authService.dao.entity.user.User;
 import dmitr.stockcontrol.authService.dao.repository.user.UserRepository;
 import dmitr.stockcontrol.authService.dto.auth.AuthUserDetailsDto;
@@ -14,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -69,6 +71,7 @@ public class AuthServiceImpl implements AuthService {
 
     private AuthUserDetailsDto getAuthUserDtoFromUser(User user) {
         UUID authUserId = user.getId();
+        String username = user.getUsername();
 
         List<GrantedAuthority> authUserRights = user.getRights()
                 .stream()
@@ -77,6 +80,7 @@ public class AuthServiceImpl implements AuthService {
 
         return AuthUserDetailsDto.builder()
                 .id(authUserId)
+                .username(username)
                 .rights(authUserRights)
                 .build();
     }
@@ -87,6 +91,26 @@ public class AuthServiceImpl implements AuthService {
         return AuthResponseDto.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
+                .build();
+    }
+
+    @Override
+    public AuthUserDto getAuthUser() {
+        AuthUserDetailsDto authUserDetails = (AuthUserDetailsDto) SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getPrincipal();
+
+        UUID userId = authUserDetails.getId();
+        String username = authUserDetails.getUsername();
+        List<String> rightLabels = authUserDetails.getRights()
+                .stream()
+                .map(GrantedAuthority::getAuthority)
+                .toList();
+
+        return AuthUserDto.builder()
+                .id(userId)
+                .username(username)
+                .rights(rightLabels)
                 .build();
     }
 }

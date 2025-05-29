@@ -14,11 +14,12 @@ import java.util.UUID;
 public class AuthUserDetailsDto implements UserDetails {
 
     private UUID id;
+    private String username;
     private List<GrantedAuthority> rights;
 
     @Override
     public String getUsername() {
-        return "";
+        return username;
     }
 
     @Override

@@ -23,6 +23,7 @@ public class AuthUserTokenExtractorServiceImpl implements AuthUserTokenExtractor
         Claims claims = jwtService.extractClaimsFromToken(accessToken);
 
         UUID userId = UUID.fromString(claims.getSubject());
+        String username = claims.get("username", String.class);
         List<String> rightLabels = (List<String>) claims.get("rights");
 
         List<GrantedAuthority> rights = rightLabels.stream()
@@ -31,6 +32,7 @@ public class AuthUserTokenExtractorServiceImpl implements AuthUserTokenExtractor
 
         return AuthUserDetailsDto.builder()
                 .id(userId)
+                .username(username)
                 .rights(rights)
                 .build();
     }

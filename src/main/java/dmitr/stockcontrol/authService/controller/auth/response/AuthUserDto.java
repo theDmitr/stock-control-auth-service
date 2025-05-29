@@ -1,4 +1,4 @@
-package dmitr.stockcontrol.authService.controller.user.response;
+package dmitr.stockcontrol.authService.controller.auth.response;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -11,5 +11,6 @@ import java.util.UUID;
 public class AuthUserDto {
 
     private UUID id;
+    private String username;
     private List<String> rights;
 }

@@ -29,6 +29,7 @@ public class AuthUserTokenGeneratorServiceImpl implements AuthUserTokenGenerator
 
         JwtGenerationDetailsDto jwtGenerationDetails = JwtGenerationDetailsDto.builder()
                 .subject(authUser.getId().toString())
+                .claim("username", authUser.getUsername())
                 .claim("rights", rightLabels)
                 .lifetime(FIVE_MINUTES_IN_MILLIS)
                 .build();

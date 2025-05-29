@@ -7,5 +7,6 @@ import java.util.UUID;
 public interface AuthUserTokenExtractorService {
 
     AuthUserDetailsDto getAuthUserFromAccessToken(String accessToken);
+
     UUID getUserIdFromRefreshToken(String refreshToken);
 }
